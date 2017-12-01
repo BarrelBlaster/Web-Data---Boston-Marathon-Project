@@ -1,0 +1,291 @@
+---
+title: "Boston Marathon: Visualizations"
+author: "Me"
+date: '2017-10-24'
+output: html_document
+---
+
+# loading libraries
+```{r}
+library(tidyverse)
+library(grid)
+library(RColorBrewer)
+library(directlabels)
+library(gridExtra)
+```
+
+
+# loading the combined dataset
+```{r}
+df <- read.csv("~/Desktop/Year 3 Sem 1/LS 88-002/CSVs/combined.csv")
+df$official <- as.numeric(as.character(df$official))
+df1 <- df[!is.na(df$official), ]
+```
+
+
+# number of runners by year
+```{r}
+runners_by_year <- df %>%
+  filter(year != 2013) %>%
+  select(year) %>%
+  group_by(year) %>%
+  summarise(number_of_runners = n()) %>%
+  mutate(diff_2001 = number_of_runners - number_of_runners[1])
+
+runners_by_year_plot <- runners_by_year %>%
+  ggplot(aes(x = year, y = number_of_runners, fill = "purple")) + 
+  geom_line(aes(group=1), stat = "identity", col = "purple", size = 1.1) +
+  labs(title = 'Number of Runners by Year', y = 'Number of Runners', x = "Year") +
+  theme(legend.position = "none") + 
+  expand_limits(y = 0) +
+  scale_x_continuous(breaks = seq(2002, 2014, 2))
+
+runners_by_year_plot
+```
+
+
+
+# number of runners based on gender
+```{r}
+gender <- df %>%
+  select(year, gender) %>%
+  group_by(gender, year) %>%
+  summarise(number_of_runners = n())
+
+gender_m <- df %>%
+  filter(gender == "M") %>%
+  select(year, gender) %>%
+  group_by(gender, year) %>%
+  summarise(number_of_runners = n())
+
+gender_f <- df %>%
+  filter(gender == "F") %>%
+  select(year, gender) %>%
+  group_by(gender, year) %>%
+  summarise(number_of_runners = n()) 
+
+gender_f <- gender_f %>%
+  mutate(percentMen = gender_m$number_of_runners / (gender_m$number_of_runners + gender_f$number_of_runners))
+
+gender
+gender_m
+gender_f
+```
+
+
+# gender plot
+```{r}
+gender_plot <- gender %>%
+  filter(year != 2013) %>%
+  ggplot(aes(x = year, y = number_of_runners, group = gender, col = gender)) + 
+  geom_line(size = 0.7) + 
+  labs(title = 'Number of Runners by Gender', x = "Year", y = 'Number of Runners') +
+  geom_dl(aes(label = gender), method = list(dl.combine("last.points"), cex = 1), col = "black") +
+  theme(legend.position = "none") + 
+  expand_limits(y = 0) +
+  scale_x_continuous(breaks = seq(2002, 2014, 2))
+
+gender_plot
+```
+
+# gender proportion plot
+```{r}
+gender_diff_plot <- gender_f %>%
+  filter(year != 2013) %>%
+  ggplot(aes(x = year, y = percentMen)) + 
+  geom_line(col = 'purple', size = 0.9) + 
+  labs(title = 'Proportion of Runners Who are Male', x = "Year", y = 'Proportion Male') +
+  theme(legend.position = "none") +
+  scale_x_continuous(breaks = seq(2002, 2014, 2))
+
+gender_diff_plot
+```
+
+
+# number of runners by age --> shows that runners are getting older over time
+```{r}
+age_plot1_5 <- df %>%
+  filter(year == 2001 | year == 2002 | year == 2003 | year == 2004 | year == 2005) %>%
+  filter(age < 85) %>%
+  ggplot(aes(x = age)) +
+  geom_histogram(binwidth = 10, fill = 'dark red') +
+  labs(title = "Ages of Runners from 2001-2005", x = "Age", y = "Count") +
+  scale_x_continuous(breaks = c(20, 30, 40, 50, 60, 70, 80))
+
+age_plot6_9 <- df %>%
+  filter(year == 2006 | year == 2007 | year == 2008 | year == 2009) %>%
+  ggplot(aes(x = age)) +
+  geom_histogram(binwidth = 10, fill = 'dark orange') +
+  labs(title = "Ages of Runners from 2006-2009", x = "Age", y = "Count") +
+  scale_x_continuous(breaks = c(20, 30, 40, 50, 60, 70, 80))
+
+age_plot10_14 <- df %>%
+  filter(year == 2010 | year == 2011 | year == 2012 | year == 2013 | year == 2014) %>%
+  ggplot(aes(x = age)) +
+  geom_histogram(binwidth = 10, fill = 'dark green') +
+  labs(title = "Ages of Runners from 2010-2014", x = "Age", y = "Count") +
+  scale_x_continuous(breaks = c(20, 30, 40, 50, 60, 70, 80))
+
+age_plot1_5
+age_plot6_9
+age_plot10_14
+```
+
+
+# age historgrams
+```{r}
+grid.arrange(age_plot1_5, age_plot6_9, age_plot10_14)
+```
+
+
+
+
+# average age
+```{r}
+age <- df %>%
+  select(year, age) %>%
+  group_by(year) %>%
+  summarise(avg_age = mean(age))
+age
+```
+
+# holistic age plot
+```{r}
+age_plot <- age %>% 
+  ggplot(aes(x = year, y = avg_age, fill = 'red')) +
+  geom_line(aes(group=1), stat = "identity", col = 'orange', size = 0.9) +
+  labs(title = 'Average Age by Year', y = "Average Age", x = "Year") +
+  scale_x_continuous(breaks = seq(2002, 2014, 2))
+age_plot
+```
+
+
+
+
+# runtimes by gender
+```{r}
+runtime <- df1 %>%
+  select(year, official) %>%
+  filter(year != 2013) %>%
+  group_by(year) %>%
+  summarise(avg_runtime = mean(official))
+
+runtime_m <- df1 %>%
+  filter(gender == "M") %>%
+  select(year, official) %>%
+  group_by(year) %>%
+  summarise(avg_runtime = mean(official))
+
+runtime_f <- df1 %>%
+  filter(gender == "F") %>%
+  select(year, official) %>%
+  group_by(year) %>%
+  summarise(avg_runtime = mean(official))
+
+runtime_f <- runtime_f %>%
+  mutate(difference = runtime_f$avg_runtime - runtime_m$avg_runtime)
+
+runtime
+runtime_m
+runtime_f
+```
+
+
+# gender runtime plots
+```{r}
+runtime_plot <- runtime %>% 
+  ggplot(aes(x = year, y = avg_runtime, fill = 'red')) +
+  geom_line(aes(group=1), stat = "identity", col = 'purple', size = 0.9) +
+  labs(title = 'Average Runtime by Year', y = "Avg Runtime (Minutes)", x = "Year") +  
+  geom_smooth(method=lm, se=FALSE, fullrange=FALSE, level=0.95) +
+  theme(legend.position = "None") +
+  scale_x_continuous(breaks = seq(2002, 2014, 2))
+runtime_plot
+```
+
+# male runtimes
+```{r}
+runtime_plot_m <- runtime_m %>% 
+  ggplot(aes(x = year, y = avg_runtime, fill = 'red')) +
+  geom_line(aes(group=1), stat = "identity", col = 'blue', size = 0.9) +
+  labs(title = 'Average Runtime by Year (Male)', y = "Avg Runtime (Minutes)", x = "Year") +
+  scale_x_continuous(breaks = seq(2002, 2014, 2)) +
+  scale_y_continuous(limits = c(200, 280))
+runtime_plot_m
+```
+
+#female runtimes
+```{r}
+runtime_plot_f <- runtime_f %>% 
+  ggplot(aes(x = year, y = avg_runtime, fill = 'red')) +
+  geom_line(aes(group=1), stat = "identity", col = 'pink', size = 0.9) +
+  labs(title = 'Average Runtime by Year (Female)', y = "Avg Runtime (Minutes)", x = "Year") +
+  scale_x_continuous(breaks = seq(2002, 2014, 2)) +
+  scale_y_continuous(limits = c(200, 280))
+runtime_plot_f
+```
+
+# male and female runtimes
+```{r}
+grid.arrange(runtime_plot_m, runtime_plot_f)
+```
+
+# gender runtime differences
+```{r}
+gender_diff <- runtime_f %>%
+  ggplot(aes(x = year, y = difference, fill = 'red')) +
+  geom_line(aes(group=1), stat = "identity", col = 'purple', size = 0.9) +
+  labs(title = 'Average Runtime Difference (Female Minus Male)', y = "Avg Difference (Minutes)", x = "Year") + 
+  expand_limits(y = 0) +
+  scale_x_continuous(breaks = seq(2002, 2014, 2))
+gender_diff
+```
+
+
+
+
+
+
+# countries
+```{r}
+countries <- df %>%
+  select(year, country) %>%
+  group_by(year) %>%
+  summarise(num_countries = n_distinct(country))
+countries
+```
+
+
+# country plot
+```{r}
+country_plot <- countries %>%
+  ggplot(aes(x = year, y = num_countries, fill = 'red')) +
+  geom_line(aes(group=1), stat = "identity", col = 'violet', size = 1) +
+  labs(title = 'Number of Countries by Year', y = "Number of Countries", x = "Year") +
+  scale_x_continuous(breaks = seq(2002, 2014, 2))  
+country_plot
+```
+
+
+
+
+# scatterplot of Runtime vs Age
+```{r}
+age_scatter <- df1 %>%
+  ggplot(aes(x = age, y = official, fill = 'red')) +
+  geom_point(aes(group=1), stat = "identity", col = 'dark turquoise', size = 1) +
+  geom_smooth(method=lm, se=TRUE, fullrange=FALSE, level=0.95) +
+  labs(title = 'Runtime Versus Age', y = "Average Runtime", x = "Average Age") +
+  theme(legend.position = "none") + 
+  annotate(x=20.5, y=1.5, label=paste("R = ", round(cor(df1$age, df1$official),2)), geom="text", size=4.5)
+age_scatter
+```
+
+
+
+
+
+
+
+
+

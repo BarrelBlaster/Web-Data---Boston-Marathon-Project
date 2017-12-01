@@ -1,0 +1,98 @@
+---
+title: "Boston Marathon: Combining and Cleaning Datasets"
+author: "Me"
+date: '2017-09-28'
+output: html_document
+---
+
+# Loading libraries
+```{r}
+library(tidyverse)
+library(RColorBrewer)
+```
+
+
+# Loading Datasets from 2013-2014, removing extraneous columns, and adding a "year" column
+```{r}
+df14 <- read.csv("~/Desktop/Year 3 Sem 1/LS 88-002/CSVs/results2014.csv") %>%
+  select(2, 20, 5, 6, 7, 8, 12, 14, 9, 19) %>%
+  mutate(year = 2014)
+df13 <- read.csv("~/Desktop/Year 3 Sem 1/LS 88-002/CSVs/results2013.csv") %>%
+  select(3, 20, 6, 2, 8, 9, 12, 14, 17, 11) %>%
+  mutate(year = 2013)
+
+df14
+df13
+```
+
+
+# Loading Datasets from 2001-2012, removing extraneous columns, and adding a "year" column
+```{r}
+df12 <- read.csv("~/Desktop/Year 3 Sem 1/LS 88-002/CSVs/results2012.csv") %>%
+  select(-c(1, 11)) %>%
+  mutate(year = 2012)
+df11 <- read.csv("~/Desktop/Year 3 Sem 1/LS 88-002/CSVs/results2011.csv") %>%
+  select(-c(1, 11)) %>%
+  mutate(year = 2011)
+df10 <- read.csv("~/Desktop/Year 3 Sem 1/LS 88-002/CSVs/results2010.csv") %>%
+  select(-c(1, 11)) %>%
+  mutate(year = 2010)
+df09 <- read.csv("~/Desktop/Year 3 Sem 1/LS 88-002/CSVs/results2009.csv") %>%
+  select(-c(1, 11)) %>%
+  mutate(year = 2009)
+df08 <- read.csv("~/Desktop/Year 3 Sem 1/LS 88-002/CSVs/results2008.csv") %>%
+  select(-c(1, 11)) %>%
+  mutate(year = 2008) 
+df07 <- read.csv("~/Desktop/Year 3 Sem 1/LS 88-002/CSVs/results2007.csv") %>%
+  select(-c(1, 11)) %>%
+  mutate(year = 2007)
+df06 <- read.csv("~/Desktop/Year 3 Sem 1/LS 88-002/CSVs/results2006.csv") %>%
+  select(-c(1, 11)) %>%
+  mutate(year = 2006)
+df05 <- read.csv("~/Desktop/Year 3 Sem 1/LS 88-002/CSVs/results2005.csv") %>%
+  select(-c(1, 11)) %>%
+  mutate(year = 2005)
+df04 <- read.csv("~/Desktop/Year 3 Sem 1/LS 88-002/CSVs/results2004.csv") %>%
+  select(-c(1, 11)) %>%
+  mutate(year = 2004)
+df03 <- read.csv("~/Desktop/Year 3 Sem 1/LS 88-002/CSVs/results2003.csv") %>%
+  select(-c(1, 11)) %>%
+  mutate(year = 2003)
+df02 <- read.csv("~/Desktop/Year 3 Sem 1/LS 88-002/CSVs/results2002.csv") %>%
+  select(-c(1, 11)) %>%
+  mutate(year = 2002)
+df01 <- read.csv("~/Desktop/Year 3 Sem 1/LS 88-002/CSVs/results2001.csv") %>%
+  select(-c(1, 11)) %>%
+  mutate(year = 2001)
+
+df12
+df11
+df10
+df09
+df08
+df07
+df06
+df05
+df04
+df03
+df02
+df01
+```
+
+
+# Combining all the years together with the rbind function
+```{r}
+binded <- rbind(df01, rbind(df02, rbind(df03, rbind(df04, rbind(df05, rbind(df06, rbind(df07, rbind(df08, rbind(df09, rbind(df10, rbind(df11, rbind(df12, rbind(df13, df14)))))))))))))
+
+binded
+```
+
+
+# Saving the combined dataset as a csv file
+```{r}
+combined <- binded
+write.csv(combined, "combined.csv")
+```
+
+
+
